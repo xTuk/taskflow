@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { presignUploadSchema } from "@/lib/validators";
-import { isS3Configured, createPresignedUploadUrl, buildAttachmentKey } from "@/lib/s3";
+import {
+  isS3Configured,
+  createPresignedUploadUrl,
+  buildAttachmentKey,
+  isAllowedAttachmentType,
+} from "@/lib/s3";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +43,13 @@ export async function POST(request: NextRequest) {
   }
 
   const { taskId, fileName, fileType, fileSize } = parsed.data;
+
+  if (!isAllowedAttachmentType(fileType)) {
+    return NextResponse.json(
+      { error: "This file type is not supported for attachments." },
+      { status: 400 }
+    );
+  }
 
   const task = await prisma.task.findUnique({
     where: { id: taskId },

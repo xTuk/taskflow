@@ -77,3 +77,29 @@ export function buildAttachmentKey(taskId: string, fileName: string): string {
   const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
   return `attachments/${taskId}/${Date.now()}-${safeName}`;
 }
+
+const ALLOWED_ATTACHMENT_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/zip",
+  "application/json",
+  "text/plain",
+  "text/csv",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+
+/**
+ * Attachments are stored with the uploader-supplied content type and served
+ * back as-is from a publicly readable bucket, so types that a browser
+ * renders as active content (HTML, SVG, JS) must be rejected — otherwise an
+ * uploaded file becomes a stored-XSS payload hosted on our own bucket.
+ */
+export function isAllowedAttachmentType(contentType: string): boolean {
+  return ALLOWED_ATTACHMENT_TYPES.has(contentType);
+}
