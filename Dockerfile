@@ -13,6 +13,9 @@ RUN apt-get update -y \
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
+# `npm ci` triggers the `postinstall: prisma generate` script, which reads
+# prisma/schema.prisma — it has to be present before installing, not after.
+COPY prisma ./prisma
 RUN npm ci
 
 # ---- builder: compile the Next.js app ----
